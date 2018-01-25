@@ -75,3 +75,62 @@ BOOST_FIXTURE_TEST_CASE(Hrep2Vrep, Rep)
 
     poly.printVrep();
 }
+
+BOOST_FIXTURE_TEST_CASE(Contains, Rep)
+{
+    Eigen::Polyhedron poly;
+    poly.vrep(AHrep, bHrep);
+    Eigen::PolyhedronHRep h{poly.hrep()};
+    for(int i = 0; i < AVrep.rows(); ++i)
+        BOOST_CHECK(h.contains(AVrep.row(i).transpose()));
+
+    //check plane at z=2 contained
+    for(int x = -100; x <= 100; ++x)
+    {
+        for(int y = -100; y <= 100; ++y)
+        {
+            BOOST_CHECK(h.contains(Eigen::Vector3d{0.01*x, 0.01*y, 2}));
+        }
+    }
+    //check plane at z=2 excluded
+    for(int x = 1; x <= 100; ++x)
+    {
+        for(int y = 1; y <= 100; ++y)
+        {
+            BOOST_CHECK(!h.contains(Eigen::Vector3d{1+0.01*x, 0.01*y, 2}));
+            BOOST_CHECK(!h.contains(Eigen::Vector3d{0.01*x, 1+0.01*y, 2}));
+            BOOST_CHECK(!h.contains(Eigen::Vector3d{-1-0.01*x, 0.01*y, 2}));
+            BOOST_CHECK(!h.contains(Eigen::Vector3d{0.01*x, -1-0.01*y, 2}));
+        }
+    }
+    BOOST_CHECK(h.contains(Eigen::Vector3d{0,0,0}));
+    BOOST_CHECK(h.contains(Eigen::Vector3d{1, 0, 2}));
+    BOOST_CHECK(h.contains(Eigen::Vector3d{0,0,1}));
+    BOOST_CHECK(!h.contains(Eigen::Vector3d{0,0,-1}));
+}
+
+BOOST_FIXTURE_TEST_CASE(Evaluate, Rep)
+{
+    Eigen::Polyhedron poly;
+    poly.vrep(AHrep, bHrep);
+    Eigen::PolyhedronHRep h{poly.hrep()};
+    for(int i = 0; i < AVrep.rows(); ++i)
+        BOOST_CHECK_EQUAL(h.evaluate(AVrep.row(i).transpose()), 0);
+    //check edges at z = 2
+    for(int i = -100; i <= 100; ++i)
+    {
+        BOOST_CHECK_EQUAL(h.evaluate(Eigen::Vector3d{1,0.01*i,2}), 0);
+        BOOST_CHECK_EQUAL(h.evaluate(Eigen::Vector3d{-1,0.01*i,2}), 0);
+        BOOST_CHECK_EQUAL(h.evaluate(Eigen::Vector3d{0.01*i,1,2}), 0);
+        BOOST_CHECK_EQUAL(h.evaluate(Eigen::Vector3d{0.01*i,-1,2}), 0);
+    }
+    //check z-axis (in poly)
+    BOOST_CHECK_EQUAL(h.evaluate(Eigen::Vector3d{0,0,0}), 0);
+    for(int i = 1; i <= 100; ++i)
+    {
+        const auto z=0.1*i;
+        const auto x = 0.5 * z;
+        BOOST_CHECK_GT(h.evaluate(Eigen::Vector3d{0,0,-z}), 0);
+        BOOST_CHECK_CLOSE(h.evaluate(Eigen::Vector3d{0,0,z}), -z*x/std::hypot(z,x), 1e-10);
+    }
+}

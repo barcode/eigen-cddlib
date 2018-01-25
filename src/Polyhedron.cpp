@@ -99,7 +99,7 @@ void Polyhedron::initializeMatrixPtr(Eigen::Index rows, Eigen::Index cols, bool 
 {
     if (matPtr_ != nullptr)
         dd_FreeMatrix(matPtr_);
-    
+
     matPtr_ = dd_CreateMatrix(rows, cols);
     matPtr_->representation = (isFromGenerators ? dd_Generator : dd_Inequality);
 }
@@ -143,6 +143,57 @@ std::pair<Eigen::MatrixXd, Eigen::VectorXd> Polyhedron::ddfMatrix2EigenMatrix(co
     }
 
     return std::make_pair(mOut, vOut);
+}
+
+PolyhedronHRep::PolyhedronHRep(std::pair<MatrixXd, VectorXd> hrep) :
+    hrepA_{std::move(hrep.first)}, hrepB_{std::move(hrep.second)}
+{
+    checkAndNormalize();
+}
+
+PolyhedronHRep::PolyhedronHRep(MatrixXd A, VectorXd B) :
+    hrepA_{std::move(A)}, hrepB_{std::move(B)}
+{
+    checkAndNormalize();
+}
+
+bool PolyhedronHRep::contains(const Eigen::VectorXd& x) const
+{
+    checkX(x);
+    return ((hrepA_ * x).array() <= hrepB_.array()).all();
+}
+
+double PolyhedronHRep::evaluate(const VectorXd &x) const
+{
+    checkX(x);
+    return ((hrepA_ * x) - hrepB_).maxCoeff();
+}
+
+void PolyhedronHRep::checkAndNormalize()
+{
+    if (hrepA_.rows() != hrepB_.rows())
+        throw std::invalid_argument(
+                "A and b must have the same number of rows! They have " + std::to_string(hrepA_.rows()) +
+                " and " + std::to_string(hrepB_.rows()) + " rows."
+                );
+    for(int i = 0; i < hrepA_.rows(); ++i)
+    {
+        const auto len = hrepA_.row(i).lpNorm<2>();
+        hrepA_.row(i) /= len;
+        hrepB_.row(i) /= len;
+    }
+}
+
+void PolyhedronHRep::checkX(const VectorXd &x) const
+{
+
+    if (x.rows() != hrepA_.cols())
+    {
+        throw std::invalid_argument{
+            "x has to be a col vector of size " + std::to_string(hrepA_.cols()) +
+                    ". x has size " + std::to_string(x.rows()) + "X" + std::to_string(x.cols())
+        };
+    }
 }
 
 } // namespace Eigen

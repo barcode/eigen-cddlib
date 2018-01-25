@@ -81,5 +81,55 @@ private:
     static std::mutex mtx;
 };
 
+/**
+ * @brief Wraps a Polyhedron hrep and offers functions to check whether a point is contained or
+ * evaluate the hrep for a point and get distance information.
+ */
+class PolyhedronHRep
+{
+public:
+    /**
+     * @brief Construct a PolyhedronHRep from the given hrep.
+     * @param hrep The hrep as pair of (A, b)
+     */
+    PolyhedronHRep(std::pair<Eigen::MatrixXd, Eigen::VectorXd> hrep);
+    /**
+     * @brief Construct a PolyhedronHRep from the given hrep.
+     * @param A The hreps matrix
+     * @param B The hreps vector
+     */
+    PolyhedronHRep(Eigen::MatrixXd A, Eigen::VectorXd B);
+
+    /** Default copy ctor */
+    PolyhedronHRep(const PolyhedronHRep&) = default;
+    /** Default move ctor */
+    PolyhedronHRep(PolyhedronHRep&&) = default;
+
+    /** Default copy assign */
+    PolyhedronHRep& operator=(const PolyhedronHRep&) = default;
+    /** Default move assign */
+    PolyhedronHRep& operator=(PolyhedronHRep&&) = default;
+
+    /**
+     * @param x The point to check.
+     * @return True if the point is contained in the hrep.
+     */
+    bool contains(const Eigen::VectorXd& x) const;
+
+    /**
+     * @param x The point to evaluate.
+     * @return If the point is contained: minus the distance to the Polyhedrons surface.
+     * Otherwise a lower bound for the distance to the Polyhedrons surface.
+     */
+    double evaluate(const Eigen::VectorXd& x) const;
+
+private:
+    void checkAndNormalize();
+    void checkX(const Eigen::VectorXd& x) const;
+
+    Eigen::MatrixXd hrepA_;
+    Eigen::VectorXd hrepB_;
+};
+
 
 } // namespace Eigen
