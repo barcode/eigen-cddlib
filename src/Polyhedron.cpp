@@ -17,31 +17,30 @@
 
 #include "Polyhedron.h"
 
+struct dd_global_constants
+{
+    dd_global_constants()
+    {
+        dd_set_global_constants();
+    }
+    ~dd_global_constants()
+    {
+        dd_free_global_constants();
+    }
+};
+
+const dd_global_constants singleton;
+
 namespace Eigen {
 
-std::atomic_int Polyhedron::counter(0);
 std::mutex Polyhedron::mtx;
-
-Polyhedron::Polyhedron()
-    : matPtr_(nullptr)
-    , polytope_(nullptr)
-{
-    if (counter == 0)
-        dd_set_global_constants();
-    counter++;
-}
 
 Polyhedron::~Polyhedron()
 {
-    counter--;
-
     if (matPtr_ != nullptr)
         dd_FreeMatrix(matPtr_);
     if (polytope_ != nullptr)
         dd_FreePolyhedra(polytope_);
-
-    if (counter == 0)
-        dd_free_global_constants();
 }
 
 void Polyhedron::vrep(const Eigen::MatrixXd& A, const Eigen::VectorXd& b)

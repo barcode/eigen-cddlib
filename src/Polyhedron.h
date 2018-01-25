@@ -33,8 +33,6 @@ namespace Eigen {
  */
 class Polyhedron {
 public:
-    /* Default constructor that set cdd global constants. */
-    Polyhedron();
     /* Free the pointers and unset the cdd global constants. */
     ~Polyhedron();
 
@@ -78,13 +76,13 @@ private:
     std::pair<Eigen::MatrixXd, Eigen::VectorXd> ddfMatrix2EigenMatrix(const dd_MatrixPtr mat, bool isOuputVRep) const;
 
 private:
-    dd_MatrixPtr matPtr_;
-    dd_PolyhedraPtr polytope_;
+    dd_MatrixPtr matPtr_{nullptr};
+    dd_PolyhedraPtr polytope_{nullptr};
     dd_ErrorType err_;
 
 private:
-    static std::atomic_int counter;
     static std::mutex mtx;
 };
+
 
 } // namespace Eigen
