@@ -77,8 +77,6 @@ private:
 private:
     dd_MatrixPtr matPtr_{nullptr};
     dd_PolyhedraPtr polytope_{nullptr};
-    dd_ErrorType err_;
-
 private:
     static std::mutex mtx;
 };
