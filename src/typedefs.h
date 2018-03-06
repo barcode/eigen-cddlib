@@ -20,7 +20,7 @@
 
 namespace Eigen {
 
-#ifdef EIGEN_3_2_FOUND
+#if EIGEN_WORLD_VERSION == 3 && EIGEN_MAJOR_VERSION == 2
     using Index = Eigen::Matrix<int, 1, 1>::Index;
 #endif
 
