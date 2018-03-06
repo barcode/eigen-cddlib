@@ -54,7 +54,7 @@ std::string to_string(dd_ErrorType err)
         case dd_NumericallyInconsistent: return "dd_NumericallyInconsistent";
         case dd_NoError: return "dd_NoError";
     }
-    return "Unknown error (" + to_string(static_cast<int>(err)) + ")";
+    return "Unknown error (" + std::to_string(static_cast<int>(err)) + ")";
 }
 
 namespace Eigen {
@@ -310,8 +310,8 @@ void PolyhedronHRep::checkAndNormalize()
 {
     if (hrepA_.rows() != hrepB_.rows())
         throw std::invalid_argument(
-                "A and b must have the same number of rows! They have " + to_string(hrepA_.rows()) +
-                " and " + to_string(hrepB_.rows()) + " rows."
+                "A and b must have the same number of rows! They have " + std::to_string(hrepA_.rows()) +
+                " and " + std::to_string(hrepB_.rows()) + " rows."
                 );
     for(int i = 0; i < hrepA_.rows(); ++i)
     {
@@ -326,8 +326,8 @@ void PolyhedronHRep::checkX(const VectorXd &x, const char* name) const
     if (x.rows() != hrepA_.cols())
     {
         throw std::invalid_argument{
-            std::string{name} + " has to be a col vector of size " + to_string(hrepA_.cols()) +
-            ". " + std::string{name} + " has size " + to_string(x.rows()) + "X" + to_string(x.cols())
+            std::string{name} + " has to be a col vector of size " + std::to_string(hrepA_.cols()) +
+            ". " + std::string{name} + " has size " + std::to_string(x.rows()) + "X" + std::to_string(x.cols())
         };
     }
 }
