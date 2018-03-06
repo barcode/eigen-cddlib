@@ -77,6 +77,7 @@ private:
 private:
     dd_MatrixPtr matPtr_{nullptr};
     dd_PolyhedraPtr polytope_{nullptr};
+    dd_ErrorType err_;
 private:
     static std::mutex mtx;
 };
@@ -98,13 +99,24 @@ public:
      * @param A The hreps matrix
      * @param B The hreps vector
      */
-    PolyhedronHRep(Eigen::MatrixXd A, Eigen::VectorXd B);
+    PolyhedronHRep(Eigen::MatrixXd A = {}, Eigen::VectorXd B = {});
+    /**
+     * @brief Construct a PolyhedronHRep from the given hrep.
+     * @param A The hreps matrix
+     * @param B The hreps vector
+     */
+    PolyhedronHRep(const Eigen::MatrixXd& A, const Eigen::VectorXd& B);
 
     /** Default copy ctor */
     PolyhedronHRep(const PolyhedronHRep&) = default;
     /** Default move ctor */
     PolyhedronHRep(PolyhedronHRep&&) = default;
 
+    /**
+     * @brief Assign the given hrep.
+     * @param hrep The hrep as pair of (A, b)
+     */
+    PolyhedronHRep& operator=(std::pair<Eigen::MatrixXd, Eigen::VectorXd> hrep);
     /** Default copy assign */
     PolyhedronHRep& operator=(const PolyhedronHRep&) = default;
     /** Default move assign */
@@ -123,9 +135,20 @@ public:
      */
     double evaluate(const Eigen::VectorXd& x) const;
 
+    /**
+     * @param origin The Ray origin
+     * @param direction The Ray direction
+     * @return The intersection between the given ray and polyhedron or origin if there is no intersection,
+     */
+    Eigen::VectorXd rayIntersection(const Eigen::VectorXd& origin, const Eigen::VectorXd& direction, double shrinkBorderBy = 0) const;
+
+    const Eigen::MatrixXd& A() const;
+    const Eigen::VectorXd& B() const;
+    std::pair<Eigen::MatrixXd, Eigen::VectorXd> hrep() const;
+    std::pair<Eigen::MatrixXd, Eigen::VectorXd> vrep() const;
 private:
     void checkAndNormalize();
-    void checkX(const Eigen::VectorXd& x) const;
+    void checkX(const Eigen::VectorXd& x, const char *name = "X") const;
 
     Eigen::MatrixXd hrepA_;
     Eigen::VectorXd hrepB_;

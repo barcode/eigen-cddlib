@@ -128,9 +128,69 @@ BOOST_FIXTURE_TEST_CASE(Evaluate, Rep)
     BOOST_CHECK_EQUAL(h.evaluate(Eigen::Vector3d{0,0,0}), 0);
     for(int i = 1; i <= 100; ++i)
     {
-        const auto z=0.1*i;
+        const auto z= 0.1 * i;
         const auto x = 0.5 * z;
         BOOST_CHECK_GT(h.evaluate(Eigen::Vector3d{0,0,-z}), 0);
         BOOST_CHECK_CLOSE(h.evaluate(Eigen::Vector3d{0,0,z}), -z*x/std::hypot(z,x), 1e-10);
+    }
+}
+
+BOOST_FIXTURE_TEST_CASE(RayIntersection, Rep)
+{
+    Eigen::Polyhedron poly;
+    poly.vrep(AHrep, bHrep);
+    Eigen::PolyhedronHRep h{poly.hrep()};
+
+    BOOST_CHECK_EQUAL(Eigen::Vector3d::UnitZ(), h.rayIntersection(Eigen::Vector3d::UnitZ(),Eigen::Vector3d::UnitZ()));
+    for(int x = -100; x <= 100; ++x)
+    {
+        for(int y = -100; y <= 100; ++y)
+        {
+            const Eigen::Vector3d direction{0.01*x, 0.01*y, -0.1};
+            const Eigen::Vector3d isect = h.rayIntersection(Eigen::Vector3d::UnitZ(), direction);
+            BOOST_CHECK_SMALL(h.evaluate(isect), 1e-10);
+        }
+    }
+    //check with margin
+    for(int b = 1; b <= 100; ++b)
+    {
+        const double border = 0.01 * b;
+        for(int x = -100; x <= 100; ++x)
+        {
+            for(int y = -100; y <= 100; ++y)
+            {
+                const Eigen::Vector3d direction{0.01*x, 0.01*y, -0.1};
+                //our distance to the surfaace has to be > 1 (max border value)
+                const Eigen::Vector3d isect = h.rayIntersection(Eigen::Vector3d::UnitZ()*4, direction, border);
+                BOOST_CHECK_CLOSE(h.evaluate(isect), -border, 0.01);
+            }
+        }
+    }
+
+    //check z-axis (in poly)
+    {
+        const Eigen::Vector3d direction{1, 0, -2};
+        for(int i = 1; i <= 100; ++i)
+        {
+            const Eigen::Vector3d origin{0,0,0.1 * i};
+            BOOST_CHECK_LE(h.evaluate(origin), 0);
+            const auto dist = std::abs(h.evaluate(origin));
+
+            for(int b = 1; b <= 150; ++b)
+            {
+                const double border = dist / 100.0 * b ;
+                const Eigen::Vector3d isect = h.rayIntersection(origin, direction, border);
+                if(border >= dist)
+                {
+                    //should return origin
+                    BOOST_CHECK_EQUAL(isect,origin);
+                }
+                else
+                {
+                    //result should have requested distance
+                    BOOST_CHECK_CLOSE(h.evaluate(isect), -border, 0.01);
+                }
+            }
+        }
     }
 }
